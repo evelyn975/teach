@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>审计咖啡核对小游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+
+        .game-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .game-title {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 26px;
+        }
+
+        .game-desc {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .score-panel {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #34495e;
+        }
+
+        .score-panel span {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .staff-area {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .staff-card {
+            background: #3498db;
+            color: white;
+            padding: 20px 10px;
+            border-radius: 8px;
+            text-align: center;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .staff-name {
+            font-size: 16px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .staff-order {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .staff-coffee {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .coffee-area {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .coffee-cup {
+            background: #e67e22;
+            color: white;
+            padding: 20px 10px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: grab;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .coffee-cup:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        .coffee-order {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .coffee-name {
+            font-size: 14px;
+        }
+
+        .reset-btn {
+            display: block;
+            margin: 0 auto;
+            padding: 12px 30px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .reset-btn:hover {
+            background: #219653;
+        }
+
+        .correct {
+            background: #2ecc71 !important;
+            pointer-events: none; /* 正确后禁止重复拖拽 */
+        }
+
+        .wrong {
+            background: #e74c3c !important;
+        }
+
+        .audit-tip {
+            text-align: center;
+            margin-top: 20px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">审计咖啡核对小游戏</h1>
+        <p class="game-desc">
+            部门5人同时下单咖啡，小李取咖啡时需要核对随机订单号（存在跳号异常）<br>
+            请将咖啡拖拽到对应员工位置，核对正确得分，错误扣分！全部正确后会有通关提示！
+        </p>
+        
+        <div class="score-panel">
+            审计得分: <span id="score">0</span>
+        </div>
+
+        <!-- 员工区域（放置目标） -->
+        <div class="staff-area" id="staffArea">
+            <!-- 员工卡片由JS动态生成 -->
+        </div>
+
+        <!-- 咖啡区域（可拖拽） -->
+        <div class="coffee-area" id="coffeeArea">
+            <!-- 咖啡杯由JS动态生成 -->
+        </div>
+
+        <button class="reset-btn" id="resetBtn">重置游戏</button>
+        
+        <p class="audit-tip">审计发现：订单号为随机数字（189开头），存在跳号异常，需重点核对！</p>
+    </div>
+
+    <script>
+        // 1. 游戏数据初始化（5人，生活化人名+具体咖啡名，随机189开头订单号，保留跳号异常）
+        const staffData = [
+            { name: "王磊", order: 18901, coffee: "生椰拿铁" },
+            { name: "刘芳", order: 18905, coffee: "美式咖啡" },  // 跳号：跳过18902-18904
+            { name: "张伟", order: 18909, coffee: "焦糖玛奇朵" }, // 跳号：跳过18906-18908
+            { name: "李娜", order: 18912, coffee: "拿铁咖啡" }, // 跳号：跳过18910-18911
+            { name: "赵阳", order: 18918, coffee: "卡布奇诺" }  // 跳号：跳过18913-18917
+        ];
+
+        // 打乱咖啡顺序（增加游戏难度）
+        let coffeeData = [...staffData]
+            .sort(() => Math.random() - 0.5)
+            .map(item => ({ order: item.order, coffee: item.coffee }));
+
+        let score = 0;
+        let correctCount = 0; // 记录正确核对的数量
+        const scoreElement = document.getElementById('score');
+        const staffArea = document.getElementById('staffArea');
+        const coffeeArea = document.getElementById('coffeeArea');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // 2. 生成员工卡片（显示姓名、订单号、咖啡名）
+        function renderStaffs() {
+            staffArea.innerHTML = '';
+            staffData.forEach(staff => {
+                const staffCard = document.createElement('div');
+                staffCard.className = 'staff-card';
+                staffCard.setAttribute('data-order', staff.order);
+                staffCard.innerHTML = `
+                    <div class="staff-name">${staff.name}</div>
+                    <div class="staff-order">订单号：${staff.order}</div>
+                    <div class="staff-coffee">点单：${staff.coffee}</div>
+                `;
+                // 设置拖放目标
+                staffCard.addEventListener('dragover', (e) => {
+                    e.preventDefault(); // 允许放置
+                });
+                staffCard.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const coffeeOrder = e.dataTransfer.getData('text');
+                    checkCoffee(staffCard, coffeeOrder);
+                });
+                staffArea.appendChild(staffCard);
+            });
+        }
+
+        // 3. 生成咖啡杯（显示订单号+具体咖啡名，可拖拽）
+        function renderCoffees() {
+            coffeeArea.innerHTML = '';
+            coffeeData.forEach(coffee => {
+                const coffeeCup = document.createElement('div');
+                coffeeCup.className = 'coffee-cup';
+                coffeeCup.setAttribute('draggable', 'true');
+                coffeeCup.setAttribute('data-coffee-order', coffee.order);
+                coffeeCup.innerHTML = `
+                    <div class="coffee-order">订单 #${coffee.order}</div>
+                    <div class="coffee-name">${coffee.coffee}</div>
+                `;
+                // 拖拽事件
+                coffeeCup.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text', coffee.order);
+                    coffeeCup.style.opacity = '0.7';
+                });
+                coffeeCup.addEventListener('dragend', () => {
+                    coffeeCup.style.opacity = '1';
+                });
+                coffeeArea.appendChild(coffeeCup);
+            });
+        }
+
+        // 4. 核对咖啡正确性（统一弹窗逻辑）
+        function checkCoffee(staffCard, coffeeOrder) {
+            const staffOrder = staffCard.getAttribute('data-order');
+            // 清除之前的样式
+            staffCard.classList.remove('correct', 'wrong');
+            
+            if (staffOrder === coffeeOrder) {
+                // 正确
+                staffCard.classList.add('correct');
+                score += 10;
+                correctCount++;
+                // 隐藏已正确的咖啡杯
+                document.querySelector(`.coffee-cup[data-coffee-order="${coffeeOrder}"]`).style.opacity = '0.3';
+                document.querySelector(`.coffee-cup[data-coffee-order="${coffeeOrder}"]`).style.pointerEvents = 'none';
+                
+                // 所有都正确时弹窗
+                if (correctCount === staffData.length) {
+                    setTimeout(() => {
+                        alert(`审计核对完成！总得分：${score}分\n恭喜你完成所有咖啡的正确核对，审计通过！`);
+                    }, 300);
+                }
+            } else {
+                // 错误
+                staffCard.classList.add('wrong');
+                score -= 5;
+                // 2秒后清除错误样式，方便重新尝试
+                setTimeout(() => {
+                    staffCard.classList.remove('wrong');
+                }, 2000);
+            }
+            scoreElement.textContent = score;
+        }
+
+        // 5. 重置游戏
+        function resetGame() {
+            score = 0;
+            correctCount = 0; // 重置正确数量
+            scoreElement.textContent = score;
+            // 重新打乱咖啡顺序
+            coffeeData = [...staffData].sort(() => Math.random() - 0.5).map(item => ({ order: item.order, coffee: item.coffee }));
+            // 重新渲染
+            renderStaffs();
+            renderCoffees();
+            // 清除所有样式
+            document.querySelectorAll('.staff-card').forEach(card => {
+                card.classList.remove('correct', 'wrong');
+                card.style.pointerEvents = 'auto';
+            });
+        }
+
+        // 初始化游戏
+        renderStaffs();
+        renderCoffees();
+        resetBtn.addEventListener('click', resetGame);
+    </script>
+</body>
+</html>
