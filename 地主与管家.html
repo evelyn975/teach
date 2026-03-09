@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>地主与管家：查账先生模拟游戏</title>
+    <style>
+        /* 全局古风样式重置 */
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"SimSun", "宋体", serif}
+        body{
+            background: #f5e9d6 url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d4b886' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+            padding: 30px 20px;
+        }
+        
+        /* 主容器古风样式 */
+        .container{
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff8e8;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(139, 69, 19, 0.2);
+            border: 1px solid #d4b886;
+            position: relative;
+        }
+        /* 古风装饰角标 */
+        .container::before, .container::after {
+            content: "";
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 2px solid #8b4513;
+            opacity: 0.6;
+        }
+        .container::before {
+            top: 15px;
+            left: 15px;
+            border-right: none;
+            border-bottom: none;
+        }
+        .container::after {
+            bottom: 15px;
+            right: 15px;
+            border-left: none;
+            border-top: none;
+        }
+        
+        /* 标题样式 */
+        h1{
+            text-align: center;
+            color: #8b4513;
+            margin-bottom: 25px;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            border-bottom: 2px solid #d4b886;
+            padding-bottom: 10px;
+        }
+        
+        /* 规则区域样式 */
+        .rules{
+            background: #faf0e6;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            border: 1px solid #d4b886;
+            border-left: 4px solid #8b4513;
+        }
+        .rules h2{
+            color: #8b4513;
+            font-size: 20px;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+        .rules ul{
+            padding-left: 25px;
+            line-height: 1.9;
+            color: #5a3819;
+            font-size: 15px;
+        }
+        .rules li{
+            margin-bottom: 5px;
+        }
+        
+        /* 状态面板 */
+        .status{
+            display: flex;
+            justify-content: space-around;
+            background: #f9f1e3;
+            padding: 20px 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            border: 1px solid #d4b886;
+        }
+        .status-item{
+            text-align: center;
+            padding: 0 15px;
+        }
+        .status-item h3{
+            color: #8b4513;
+            font-size: 18px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .status-item p{
+            color: #5a3819;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        /* 按钮样式（古风按钮） */
+        .btn{
+            padding: 12px 25px;
+            background: linear-gradient(to bottom, #cd853f, #8b4513);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            margin: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: "SimSun", "宋体";
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+        .btn:hover{
+            background: linear-gradient(to bottom, #d2691e, #a0522d);
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+        }
+        /* 查账先生按钮（青色古风） */
+        .btn-audit{
+            background: linear-gradient(to bottom, #4682b4, #2f4f4f);
+        }
+        .btn-audit:hover{
+            background: linear-gradient(to bottom, #5f9ea0, #36648b);
+        }
+        /* 结束游戏按钮（红色古风） */
+        .btn-end{
+            background: linear-gradient(to bottom, #cd5c5c, #8b0000);
+        }
+        .btn-end:hover{
+            background: linear-gradient(to bottom, #dc143c, #a52a2a);
+        }
+        
+        /* 日志区域 */
+        .log{
+            background: #f9f1e3;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 25px;
+            height: 180px;
+            overflow-y: auto;
+            border: 1px solid #d4b886;
+        }
+        .title{
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #8b4513;
+            font-size: 16px;
+        }
+        .round{
+            margin: 8px 0;
+            color: #5a3819;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* 登记弹窗（古风） */
+        .modal{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+        .modal-content{
+            background: #fff8e8;
+            padding: 40px 30px;
+            border-radius: 8px;
+            width: 420px;
+            text-align: center;
+            border: 1px solid #d4b886;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        .modal-content h2{
+            color: #8b4513;
+            margin-bottom: 25px;
+            font-size: 22px;
+            font-weight: bold;
+            border-bottom: 1px solid #d4b886;
+            padding-bottom: 10px;
+        }
+        .modal-content input{
+            width: 85%;
+            padding: 12px 10px;
+            margin-bottom: 25px;
+            border: 1px solid #d4b886;
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: "SimSun", "宋体";
+            background: #faf0e6;
+            color: #5a3819;
+        }
+        .modal-content input::placeholder{
+            color: #a67c52;
+        }
+        
+        /* 成绩统计面板（古风表格） */
+        .score-board{
+            margin-top: 25px;
+            padding: 25px;
+            background: #faf0e6;
+            border-radius: 6px;
+            display: none;
+            border: 1px solid #d4b886;
+        }
+        .score-board h2{
+            color: #8b4513;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .score-table{
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-family: "SimSun", "宋体";
+        }
+        .score-table th{
+            padding: 12px 8px;
+            border: 1px solid #d4b886;
+            background: linear-gradient(to bottom, #f9f1e3, #f5e9d6);
+            color: #8b4513;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .score-table td{
+            padding: 12px 8px;
+            border: 1px solid #d4b886;
+            color: #5a3819;
+            font-size: 15px;
+        }
+        .score-table tr:nth-child(even){
+            background: #fdf5e6;
+        }
+        .score-table tr:hover{
+            background: #f9f1e3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏮 地主经营与查账先生模拟游戏 🏮</h1>
+
+        <!-- 游戏规则展示区域 -->
+        <div class="rules">
+            <h2>🎯 游戏规则</h2>
+            <ul>
+                <li>初始资源：每位地主拥有100亩土地、100点精力值、0两银两</li>
+                <li>自主管理：消耗40点精力，收益=土地数×1.5（无贪墨，收益高）</li>
+                <li>委托管家：消耗10点精力，基础收益=土地数×1.0（管家会瞒报50%-80%收益）</li>
+                <li>查账先生：可追回管家瞒报的全部银两（仅当本轮委托管家时可用）</li>
+                <li>开启新一轮：精力值恢复至100点，进入下一轮决策</li>
+                <li>游戏目标：通过合理决策（自主/委托/查账）实现银两最大化</li>
+            </ul>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <h3>土地</h3>
+                <p id="land">100 亩</p>
+            </div>
+            <div class="status-item">
+                <h3>精力值</h3>
+                <p id="energy">100</p>
+            </div>
+            <div class="status-item">
+                <h3>银两</h3>
+                <p id="money">0</p>
+            </div>
+        </div>
+
+        <div style="text-align:center">
+            <button class="btn" onclick="selfManage()">👨‍🌾 自主管理（收益高·费精力）</button>
+            <button class="btn" onclick="assignSteward()">🏠 委托管家（低消耗·有贪墨）</button>
+            <button class="btn btn-audit" onclick="doAudit()">📜 请查账先生（查账追赃）</button>
+            <button class="btn" onclick="newRound()">🔄 开启新一轮（恢复精力）</button>
+            <button class="btn btn-end" onclick="endGame()">🏁 结束游戏（提交成绩）</button>
+        </div>
+
+        <div class="log">
+            <div class="title">经营日志：</div>
+            <div id="logArea"></div>
+        </div>
+
+        <!-- 成绩统计面板 -->
+        <div class="score-board" id="scoreBoard">
+            <h2>📊 全班成绩排行榜</h2>
+            <table class="score-table">
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>学生姓名</th>
+                        <th>最终银两（两）</th>
+                        <th>总轮数</th>
+                    </tr>
+                </thead>
+                <tbody id="scoreList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 姓名登记弹窗（初始显示） -->
+    <div class="modal" id="nameModal">
+        <div class="modal-content">
+            <h2>📝 地主姓名登记</h2>
+            <input type="text" id="studentName" placeholder="请输入你的姓名" required>
+            <button class="btn" onclick="submitName()">确认登记</button>
+        </div>
+    </div>
+
+<script>
+    // 全局数据
+    let data = {
+        land: 100,
+        energy: 100,
+        money: 0,
+        realStewardIncome: 0,
+        reportedIncome: 0,
+        round: 1,
+        studentName: '' // 当前学生姓名
+    }
+    // 全班成绩列表（存储所有学生的成绩）
+    let allScores = []
+
+    // 页面加载时显示姓名登记弹窗
+    window.onload = function() {
+        document.getElementById('nameModal').style.display = 'flex'
+    }
+
+    // 提交姓名
+    function submitName() {
+        let name = document.getElementById('studentName').value.trim()
+        if (!name) {
+            alert('请输入你的姓名！')
+            return
+        }
+        data.studentName = name
+        // 关闭弹窗
+        document.getElementById('nameModal').style.display = 'none'
+        // 记录日志
+        log(`欢迎地主【${name}】开始经营！`)
+        updateUI()
+    }
+
+    // 更新界面
+    function updateUI(){
+        document.getElementById('land').innerText = data.land + ' 亩'
+        document.getElementById('energy').innerText = data.energy
+        document.getElementById('money').innerText = data.money + ' 两'
+    }
+
+    // 日志
+    function log(txt){
+        let area = document.getElementById('logArea')
+        area.innerHTML += `<div class="round">第${data.round}轮：${txt}</div>`
+        area.scrollTop = area.scrollHeight
+    }
+
+    // 自主管理
+    function selfManage(){
+        if(data.energy < 40){
+            log('精力不足（需40点），无法自主经营！')
+            return
+        }
+        let income = Math.floor(data.land * 1.5)
+        data.energy -= 40
+        data.money += income
+        log(`自主经营完成！收益 ${income} 两，消耗精力40点。`)
+        updateUI()
+    }
+
+    // 委托管家
+    function assignSteward(){
+        if(data.energy < 10){
+            log('精力不足（需10点），无法委托管家！')
+            return
+        }
+        data.energy -= 10
+        let real = data.land * 1
+        let report = Math.floor(real * (0.5 + Math.random()*0.3))
+        data.realStewardIncome = real
+        data.reportedIncome = report
+        data.money += report
+        log(`委托管家：管家上报收益 ${report} 两，消耗精力10点。（真实收益只有你不知道）`)
+        updateUI()
+    }
+
+    // 查账先生（原第三方审计）
+    function doAudit(){
+        if(data.realStewardIncome === 0){
+            log('本轮未委托管家，无需请查账先生！')
+            return
+        }
+        let gap = data.realStewardIncome - data.reportedIncome
+        data.money += gap
+        log(`✅ 查账先生核账完成！管家真实收益：${data.realStewardIncome} 两，瞒报 ${gap} 两，已全部追回！`)
+        data.realStewardIncome = 0
+        data.reportedIncome = 0
+        updateUI()
+    }
+
+    // 新一轮
+    function newRound(){
+        data.energy = 100
+        data.round += 1
+        data.realStewardIncome = 0
+        data.reportedIncome = 0
+        log('新一轮开始，精力值已恢复至100！')
+        updateUI()
+    }
+
+    // 结束游戏并提交成绩
+    function endGame() {
+        if (!data.studentName) {
+            alert('请先完成姓名登记！')
+            return
+        }
+        // 保存当前学生成绩
+        let studentScore = {
+            name: data.studentName,
+            money: data.money,
+            round: data.round - 1 // 已完成的轮数
+        }
+        allScores.push(studentScore)
+        
+        // 按银两降序排序
+        allScores.sort((a, b) => b.money - a.money)
+        
+        // 显示成绩面板
+        document.getElementById('scoreBoard').style.display = 'block'
+        let scoreList = document.getElementById('scoreList')
+        scoreList.innerHTML = ''
+        
+        // 渲染成绩列表
+        allScores.forEach((item, index) => {
+            let tr = document.createElement('tr')
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.name}</td>
+                <td>${item.money}</td>
+                <td>${item.round}</td>
+            `
+            scoreList.appendChild(tr)
+        })
+        
+        // 提示
+        log(`游戏结束！【${data.studentName}】最终银两：${data.money} 两，共完成 ${data.round - 1} 轮经营。`)
+        alert(`🎉 游戏结束！你的最终银两：${data.money} 两\n已提交成绩到排行榜！`)
+    }
+
+    updateUI()
+</script>
+</body>
+</html>
